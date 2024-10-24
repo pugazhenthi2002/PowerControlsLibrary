@@ -11,3 +11,6 @@ C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\LibraryTestProject\obj\D
 C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\LibraryTestProject\obj\Debug\LibraryTestProject.csproj.CopyComplete
 C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\LibraryTestProject\obj\Debug\LibraryTestProject.exe
 C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\LibraryTestProject\obj\Debug\LibraryTestProject.pdb
+C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\LibraryTestProject\bin\Debug\DatabaseLibrary.dll
+C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\LibraryTestProject\bin\Debug\GoLibrary.dll
+C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\LibraryTestProject\bin\Debug\MySql.Data.dll
