@@ -28,6 +28,8 @@ namespace PowerControlsLibrary.MultiSlider
             BackColor = TransparencyKey = transparencyColor;
         }
 
+        public bool IsCurrentSelectedToolTip { get; set; }
+
         public string SliderName
         {
             get
@@ -96,15 +98,23 @@ namespace PowerControlsLibrary.MultiSlider
             }
         }
 
+        public bool IsUpsideDown { get; set; } = false;
+
         private bool isInputEntry, isBlinking;
         private int value, radius = 20, valueWidth, nameWidth, inputText;
         private string sliderName;
+        private Matrix lastGraphicsMatrix;
         private Color sliderToolTipBackColor;
         private Timer blinkTimer;
 
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+            if (IsUpsideDown)
+            {
+                e.Graphics.TranslateTransform(0, Height);
+                e.Graphics.ScaleTransform(1, -1);
+            }
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
 
             StringFormat sFormat = new StringFormat();
@@ -114,21 +124,38 @@ namespace PowerControlsLibrary.MultiSlider
             Pen pen = new Pen(ForeColor, 3);
             SolidBrush foregroundBrush = new SolidBrush(ForeColor);
             SolidBrush backgroundBrush = new SolidBrush(SliderToolTipBackColor);
+            int height = Height * 4 / 5, posX = 0, posY = 0;
 
             GraphicsPath graphPath = new GraphicsPath();
-            graphPath.AddArc(new Rectangle(1, 1, radius, radius), 180, 90);
-            graphPath.AddArc(new Rectangle(Width - radius, 1, radius - 2, radius), 270, 90);
-            graphPath.AddArc(new Rectangle(Width - radius, Height - radius, radius - 2, radius - 2), 0, 90);
-            graphPath.AddArc(new Rectangle(1, Height - radius, radius, radius - 2), 90, 90);
+            graphPath.AddArc(new Rectangle(1, 2, radius, radius), 180, 90);
+            graphPath.AddArc(new Rectangle(Width - radius, 2, radius - 2, radius), 270, 90);
+            graphPath.AddArc(new Rectangle(Width - radius, height - radius, radius - 2, radius - 2), 0, 90);
+
+            graphPath.AddLine(Width - radius, height - 2, Width * 3 / 5 + 2, height - 2);
+
+            graphPath.AddLine(Width * 3 / 5, height, Width / 2, Height);
+            graphPath.AddLine(Width / 2, Height, Width * 2 / 5, height);
+
+            graphPath.AddLine(Width * 2 / 5 - 2, height - 2, radius + 2, height - 2);
+
+            graphPath.AddArc(new Rectangle(1, height - radius, radius, radius - 2), 90, 90);
             graphPath.CloseFigure();
             e.Graphics.FillPath(backgroundBrush, graphPath);
             e.Graphics.DrawPath(pen, graphPath);
 
             Font headerFont = new Font(Font, FontStyle.Bold);
-            e.Graphics.DrawString(sliderName, headerFont, foregroundBrush, new RectangleF(0, 0, Width, Height / 2), sFormat);
+            if (IsUpsideDown)
+            {
+                e.Graphics.TranslateTransform(0, Height);
+                e.Graphics.ScaleTransform(1, -1);
+                posY = Height / 5;
+            }
+            e.Graphics.DrawString(sliderName, headerFont, foregroundBrush, new RectangleF(0, posY, Width, height / 2), sFormat);
 
             if (!IsInputEntry)
-                e.Graphics.DrawString(value.ToString(), Font, foregroundBrush, new RectangleF(0, Height / 2, Width, Height / 2), sFormat);
+            {
+                e.Graphics.DrawString(value.ToString(), Font, foregroundBrush, new RectangleF(0, posY + height / 2, Width, height / 2), sFormat);
+            }
             else
                 EnterInput(e.Graphics);
 
@@ -155,12 +182,12 @@ namespace PowerControlsLibrary.MultiSlider
                     Invalidate();
                 }
             }
-            else if(e.KeyChar == '\b' && isInputEntry)
+            else if (e.KeyChar == '\b' && isInputEntry)
             {
                 inputText = inputText / 10;
                 Invalidate();
             }
-            else if(e.KeyChar == '\r')
+            else if (e.KeyChar == '\r')
             {
                 SliderValueChanged?.Invoke(sliderName, inputText);
                 Hide();
@@ -177,31 +204,36 @@ namespace PowerControlsLibrary.MultiSlider
             }
 
             blinkTimer.Stop();
-            Hide();
+
+            if (IsCurrentSelectedToolTip)
+                Hide();
         }
 
         private void EnterInput(Graphics g)
         {
+            int posY = 0;
+            if (IsUpsideDown)
+            {
+                //g.Restore(lastGraphicsMatrix);
+                posY = Height / 5;
+            }
             Pen pen = new Pen(ForeColor, 2);
             SolidBrush brush = new SolidBrush(ForeColor);
             StringFormat sFormat = new StringFormat();
             sFormat.Alignment = StringAlignment.Center;
             sFormat.LineAlignment = StringAlignment.Center;
-            int width = 0;
+            int width = 0, height = Height * 4 / 5;
 
             if (inputText != 0)
             {
                 width = (int)Math.Round(CreateGraphics().MeasureString(inputText.ToString(), Font).Width);
-                g.DrawString(inputText.ToString(), Font, brush, new RectangleF(0, Height / 2, Width, Height / 2), sFormat);
+                g.DrawString(inputText.ToString(), Font, brush, new RectangleF(0, posY + height / 2, Width, height / 2), sFormat);
             }
 
             if (isBlinking)
             {
-                if (inputText == 0)
-                    ;
-
                 int xPos = (Width + width) / 2;
-                g.DrawLine(pen, xPos, Height / 2 + 4, xPos, Height - 8);
+                g.DrawLine(pen, xPos, posY + height / 2 + 3, xPos, posY + height - 6);
             }
 
             pen?.Dispose();

@@ -36,10 +36,11 @@
             this.multiSlider1.Dock = System.Windows.Forms.DockStyle.Top;
             this.multiSlider1.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.multiSlider1.LegendInterval = 5;
-            this.multiSlider1.LegendMode = PowerControlsLibrary.MultiSlider.SliderLegendMode.Milestone;
+            this.multiSlider1.LegendMode = PowerControlsLibrary.MultiSlider.SliderLegendMode.UpDownMarker;
             this.multiSlider1.Location = new System.Drawing.Point(12, 115);
             this.multiSlider1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.multiSlider1.MaximumValue = 1000;
+            this.multiSlider1.MilestoneMode = PowerControlsLibrary.MultiSlider.SliderMilestoneMode.Ruler;
             this.multiSlider1.MinimumValue = 0;
             this.multiSlider1.Name = "multiSlider1";
             this.multiSlider1.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);
