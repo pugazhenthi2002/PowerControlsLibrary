@@ -13,26 +13,6 @@ namespace PowerControlsLibrary.MultiSlider
             InitializeMultiSlider();
         }
 
-        public SliderMilestoneMode MilestoneMode
-        {
-            get => milestoneMode;
-            set
-            {
-                milestoneMode = value;
-                Invalidate();
-            }
-        }
-
-        public SliderLegendMode LegendMode
-        {
-            get => legendMode;
-            set
-            {
-                legendMode = value;
-                Invalidate();
-            }
-        }
-
         public bool ItemDisplayOnHover { get; set; }
 
         public int MinimumValue
@@ -88,6 +68,8 @@ namespace PowerControlsLibrary.MultiSlider
 
         public int SliderCount { get; }
 
+        public TooltipDisplayMode TooltipDisplayMode { get; set; }
+
         public Color SliderTransparentColor
         {
             get => sliderTransparentColor;
@@ -95,10 +77,10 @@ namespace PowerControlsLibrary.MultiSlider
             {
                 sliderTransparentColor = value;
 
-                toolTip.SliderValueChanged -= OnSliderValueChanged;
-                toolTip = new SliderValueToolTip(value);
-                toolTip.IsCurrentSelectedToolTip = true;
-                toolTip.SliderValueChanged += OnSliderValueChanged;
+                selectedToolTip.SliderValueChanged -= OnSliderValueChanged;
+                selectedToolTip = new SliderValueToolTip(value);
+                selectedToolTip.IsCurrentSelectedToolTip = true;
+                selectedToolTip.SliderValueChanged += OnSliderValueChanged;
             }
         }
 
@@ -122,10 +104,8 @@ namespace PowerControlsLibrary.MultiSlider
             }
         }
 
-        private SliderMilestoneMode milestoneMode;
-        private SliderLegendMode legendMode;
-        private bool isDragging, isInputEntering;
-        private int minimumValue = 0, maximumValue = 100, legendInterval = 1, sliderSize = 20;
+        private bool isDragging, isInputEntering, isHoverToolTipShown;
+        private int minimumValue = 0, maximumValue = 100, legendInterval = 1, sliderSize = 36, penWidth = 7;
         private int selectedSliderMinPos = 0, selectedSliderMaxPos = 0;
         private double selectedSliderMinValue = 0, selectedSliderMaxValue = 0;
         private string selectedSlider, hoverSlider;
@@ -135,7 +115,7 @@ namespace PowerControlsLibrary.MultiSlider
         private Dictionary<string, Rectangle> sliderCollection;
         private Dictionary<string, Color> colorCollection;
         private Dictionary<string, SliderValueToolTip> toolTipCollection;
-        private SliderValueToolTip toolTip;
+        private SliderValueToolTip selectedToolTip, hoverToolTip;
 
         public void AddItem(string itemName, Color color, int pos = -1, double value = -1)
         {
@@ -155,6 +135,8 @@ namespace PowerControlsLibrary.MultiSlider
             }
             if (color != null)
                 colorCollection.Add(itemName, color);
+
+            //AddToolTip(itemName, color);
             Invalidate();
         }
 
@@ -164,12 +146,9 @@ namespace PowerControlsLibrary.MultiSlider
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
             SolidBrush brush = new SolidBrush(lineColor);
-            Pen pen = new Pen(GetDarkerColor(lineColor), 2);
-            Rectangle leftArc = new Rectangle(Padding.Left, Height * 3 / 10, Height / 10, Height / 10);
-            Rectangle rightArc = new Rectangle(Width - Height / 10 - Padding.Right, Height * 3 / 10, Height / 10 - 1, Height / 10);
-
-            leftArc.Y = milestoneMode == SliderMilestoneMode.Ruler ? Height * 4 / 10 : Height * 3 / 10;
-            rightArc.Y = milestoneMode == SliderMilestoneMode.Ruler ? Height * 4 / 10 : Height * 3 / 10;
+            Pen pen = new Pen(GetDarkerColor(lineColor), penWidth);
+            Rectangle leftArc = new Rectangle(Padding.Left, Height * 3 / 20, Height / 5, Height / 5);
+            Rectangle rightArc = new Rectangle(Width - Height / 10 - Padding.Right - penWidth, Height * 3 / 20, Height / 5 - 1, Height / 5);
 
             GraphicsPath path = new GraphicsPath();
             path.StartFigure();
@@ -178,13 +157,11 @@ namespace PowerControlsLibrary.MultiSlider
             path.CloseAllFigures();
 
             e.Graphics.FillPath(brush, path);
-            SliderBarPaint(e);
+            SliderLinePaint(e);
             e.Graphics.DrawPath(pen, path);
             MilestonePaint(e);
-            SliderPaint(e);
-
-            if (legendMode == SliderLegendMode.UpDownMarker && !isDragging)
-                SliderLegendPaint(e);
+            SliderButtonPaint(e);
+            LegendPaint(e);
 
             brush?.Dispose();
             path?.Dispose();
@@ -201,7 +178,7 @@ namespace PowerControlsLibrary.MultiSlider
                 Invalidate();
             }
 
-            Height = 80;
+            Height = 100;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -234,13 +211,13 @@ namespace PowerControlsLibrary.MultiSlider
                     ShowOtherToolTips();
 
                     Point toolTipLocation = PointToScreen(slider.Location);
-                    toolTip.SliderToolTipBackColor = lineColor;
-                    toolTip.Font = Font;
-                    toolTip.ForeColor = sliderColor;
-                    toolTip.SliderName = itemCollection[ctr].Key;
-                    toolTip.Value = (int)itemCollection[ctr].Value;
-                    toolTip.Location = new Point(toolTipLocation.X - (toolTip.Width - slider.Width) / 2, toolTipLocation.Y - 60);
-                    toolTip.Show();
+                    selectedToolTip.SliderToolTipBackColor = lineColor;
+                    selectedToolTip.Font = Font;
+                    selectedToolTip.ForeColor = colorCollection[itemCollection[ctr].Key];
+                    selectedToolTip.SliderName = itemCollection[ctr].Key;
+                    selectedToolTip.Value = (int)itemCollection[ctr].Value;
+                    selectedToolTip.Location = new Point(toolTipLocation.X - (selectedToolTip.Width - slider.Width) / 2, toolTipLocation.Y - 60);
+                    selectedToolTip.Show();
                     break;
                 }
             }
@@ -270,9 +247,9 @@ namespace PowerControlsLibrary.MultiSlider
                     int pos = itemCollection.FindIndex(item => item.Key == selectedSlider);
                     itemCollection[pos] = new KeyValuePair<string, double>(selectedSlider, UpdateSelectedSliderValue(sliderCollection[selectedSlider].X, sliderCollection[selectedSlider].Width));
                     Point toolTipLocation = PointToScreen(sliderCollection[selectedSlider].Location);
-                    isInputEntering = toolTip.IsInputEntry = false;
-                    toolTip.Value = (int)itemCollection[pos].Value;
-                    toolTip.Location = new Point(toolTipLocation.X - (toolTip.Width - rect.Width) / 2, toolTipLocation.Y - 60);
+                    isInputEntering = selectedToolTip.IsInputEntry = false;
+                    selectedToolTip.Value = (int)itemCollection[pos].Value;
+                    selectedToolTip.Location = new Point(toolTipLocation.X - (selectedToolTip.Width - rect.Width) / 2, toolTipLocation.Y - 60);
                 }
 
                 Invalidate();
@@ -285,15 +262,44 @@ namespace PowerControlsLibrary.MultiSlider
                 if (Iter.Value.Contains(e.X, e.Y))
                 {
                     Cursor = Cursors.Hand;
-                    isHovering = true;
                     hoverSlider = Iter.Key;
+
+                    if (ItemDisplayOnHover && !isDragging)
+                    {
+
+                        if (!isHoverToolTipShown)
+                        {
+                            hoverToolTip = new SliderValueToolTip(sliderTransparentColor)
+                            {
+                                SliderToolTipBackColor = lineColor,
+                                ForeColor = colorCollection[Iter.Key],
+                                IsUpsideDown = false,
+                                Font = Font,
+                                ToolTipDisplayType = DisplayType.Name,
+                                IsCurrentSelectedToolTip = true,
+                                SliderName = Iter.Key
+                            };
+
+                            Point toolTipLocation = PointToScreen(Iter.Value.Location);
+                            hoverToolTip.Location = new Point(toolTipLocation.X - (hoverToolTip.Width - Iter.Value.Width) / 2, toolTipLocation.Y - 60);
+                            isHoverToolTipShown = true;
+                            hoverToolTip.Show();
+                        }
+                    }
+
+                    isHovering = true;
                 }
             }
+
 
             if (!isHovering)
             {
                 hoverSlider = "";
                 Cursor = Cursors.Default;
+                isHoverToolTipShown = false;
+
+                if (hoverToolTip != null)
+                    hoverToolTip.Close();
             }
             Invalidate();
         }
@@ -306,7 +312,7 @@ namespace PowerControlsLibrary.MultiSlider
                 Rectangle slider = sliderCollection[itemCollection[ctr].Key];
                 if (slider.Contains(e.X, e.Y))
                 {
-                    toolTip.IsInputEntry = true;
+                    selectedToolTip.IsInputEntry = true;
                     isInputEntering = true;
                     break;
                 }
@@ -336,39 +342,20 @@ namespace PowerControlsLibrary.MultiSlider
             return Color.FromArgb(r, g, b);
         }
 
-        private void SliderLegendPaint(PaintEventArgs e)
+        private void SliderLinePaint(PaintEventArgs e)
         {
-            int sliderBarPosY = milestoneMode == SliderMilestoneMode.Funnel ? Height * 3 / 10 : Height * 4 / 10, legendPosX = Padding.Left;
-            Brush brush;
-            Rectangle rectangle;
-            StringFormat sFormat = new StringFormat();
-            sFormat.Alignment = StringAlignment.Center;
-            sFormat.LineAlignment = StringAlignment.Near;
-
-            for (int ctr = 0; ctr < itemCollection.Count; ctr++)
-            {
-                rectangle = new Rectangle(legendPosX, 0, sliderCollection[itemCollection[ctr].Key].X - legendPosX, sliderBarPosY);
-                brush = new SolidBrush(colorCollection[itemCollection[ctr].Key]);
-                e.Graphics.DrawString(itemCollection[ctr].Key + ", " + itemCollection[ctr].Value.ToString(), Font, brush, rectangle, sFormat);
-                brush?.Dispose();
-                legendPosX = sliderCollection[itemCollection[ctr].Key].X;
-            }
-        }
-
-        private void SliderBarPaint(PaintEventArgs e)
-        {
-            int sliderBarPosX = Padding.Left, sliderBarPosY = milestoneMode == SliderMilestoneMode.Funnel ? Height * 3 / 10 : Height * 4 / 10;
+            int sliderBarPosX = Padding.Left, sliderBarPosY = Height * 3 / 20;
             Brush brush;
 
             for (int ctr = 0; ctr < itemCollection.Count + 1; ctr++)
             {
-                Rectangle leftArc = new Rectangle(sliderBarPosX, sliderBarPosY, Height / 10, Height / 10);
+                Rectangle leftArc = new Rectangle(sliderBarPosX, sliderBarPosY, Height / 5, Height / 5);
                 Rectangle rightArc;
 
                 if (ctr == itemCollection.Count)
-                    rightArc = new Rectangle(Width - Height / 10 - Padding.Right, sliderBarPosY, Height / 10, Height / 10);
+                    rightArc = new Rectangle(Width - Height / 10 - Padding.Right - penWidth, sliderBarPosY, Height / 5, Height / 5);
                 else
-                    rightArc = new Rectangle(sliderCollection[itemCollection[ctr].Key].X + sliderSize / 2, sliderBarPosY, Height / 10, Height / 10);
+                    rightArc = new Rectangle(sliderCollection[itemCollection[ctr].Key].X + sliderSize / 2, sliderBarPosY, Height / 5, Height / 5);
 
                 GraphicsPath path = new GraphicsPath();
                 path.StartFigure();
@@ -386,20 +373,27 @@ namespace PowerControlsLibrary.MultiSlider
             }
         }
 
-        private void SliderPaint(PaintEventArgs e)
+        private void SliderButtonPaint(PaintEventArgs e)
         {
             SolidBrush outerEllipseBrush = new SolidBrush(sliderColor);
-            SolidBrush innerEllipseBrush = new SolidBrush(Color.White);
+            SolidBrush innerEllipseBrush = new SolidBrush(lineColor);
+            StringFormat sFormat = new StringFormat();
+            sFormat.LineAlignment = sFormat.Alignment = StringAlignment.Center;
 
             foreach (var Iter in itemCollection)
             {
+                SolidBrush brush = new SolidBrush(colorCollection[Iter.Key]);
                 var slider = sliderCollection[Iter.Key];
-                e.Graphics.FillEllipse(outerEllipseBrush, slider.X, slider.Y, slider.Width, slider.Height);
+                e.Graphics.FillEllipse(brush, slider.X, slider.Y, slider.Width, slider.Height);
 
                 if (hoverSlider == Iter.Key)
                     e.Graphics.FillEllipse(innerEllipseBrush, slider.X + 5, slider.Y + 5, slider.Width - 10, slider.Height - 10);
                 else
                     e.Graphics.FillEllipse(innerEllipseBrush, slider.X + 3, slider.Y + 3, slider.Width - 6, slider.Height - 6);
+
+                Font font = new Font(Font.FontFamily, GetFittingFontSize(e.Graphics, ((int)Iter.Value).ToString(), new Font(Font.FontFamily, 20, Font.Style), new Rectangle(slider.X + 5, slider.Y + 5, slider.Width - 10, slider.Height - 10)));
+                e.Graphics.DrawString(((int)Iter.Value).ToString(), font, brush, slider, sFormat);
+                brush.Dispose();
 
             }
             innerEllipseBrush?.Dispose();
@@ -408,17 +402,16 @@ namespace PowerControlsLibrary.MultiSlider
 
         private void MilestonePaint(PaintEventArgs e)
         {
-            Pen pen = new Pen(sliderColor, 1.75f);
-            SolidBrush brush = new SolidBrush(sliderColor);
+            Pen pen = new Pen(GetDarkerColor(lineColor), 1.75f);
+            SolidBrush brush = new SolidBrush(GetDarkerColor(lineColor));
 
             float size = Height / 10, linePosY = Height * 15 / 20, stepInterval = MaximumValue / (float)(legendInterval + 1);
             int xPos = 0, ellipseYPos, stringYPos, totalWidth = Width - Padding.Left - Padding.Right;
 
-            ellipseYPos = milestoneMode == SliderMilestoneMode.Funnel ? Height * 7 / 10 : Height * 6 / 10;
-            stringYPos = milestoneMode == SliderMilestoneMode.Funnel ? Height * 17 / 20 : Height * 6 / 10;
+            ellipseYPos = Height * 7 / 10;
+            stringYPos = Height * 11 / 20;
 
-            if (milestoneMode == SliderMilestoneMode.Funnel)
-                e.Graphics.DrawLine(pen, Padding.Left, linePosY, Width - Padding.Right, linePosY);
+
             for (int ctr = 0; ctr < legendInterval + 2; ctr++)
             {
                 xPos = (int)Math.Round(totalWidth * ctr / (double)(legendInterval + 1));
@@ -428,34 +421,54 @@ namespace PowerControlsLibrary.MultiSlider
 
                 if (ctr == 0)
                 {
-                    if (milestoneMode == SliderMilestoneMode.Funnel)
-                        e.Graphics.FillEllipse(brush, new RectangleF(Padding.Left, ellipseYPos, size, size));
-
                     e.Graphics.DrawString(measureString, base.Font, brush, Padding.Left, stringYPos);
                 }
                 else if (ctr == legendInterval + 1)
                 {
-                    if (milestoneMode == SliderMilestoneMode.Funnel)
-                        e.Graphics.FillEllipse(brush, new RectangleF(Width - (size) - Padding.Right, ellipseYPos, size, size));
-
                     e.Graphics.DrawString(measureString, base.Font, brush, Width - width - Padding.Right, stringYPos);
                 }
                 else
                 {
-                    if (milestoneMode == SliderMilestoneMode.Ruler)
-                        e.Graphics.DrawLine(pen, xPos, Height * 5 / 10, xPos, Height * 6 / 10);
-
+                    e.Graphics.DrawLine(pen, xPos, Height * 9 / 20, xPos, Height * 11 / 20);
                     xPos = xPos - (int)(size / 2);
-
-                    if (milestoneMode == SliderMilestoneMode.Funnel)
-                        e.Graphics.FillEllipse(brush, new RectangleF(xPos, ellipseYPos, size, size));
-
                     e.Graphics.DrawString(measureString, base.Font, brush, xPos - (width / 2), stringYPos);
                 }
             }
 
             brush?.Dispose();
             pen?.Dispose();
+        }
+
+        private void LegendPaint(PaintEventArgs e)
+        {
+            int circleYPos = Height * 15 / 20, xPos = Padding.Left, totalWidth = Width - Padding.Left - Padding.Right, lineYPos = circleYPos + Height / 10 / 2;
+            int totalCircleWidth = (itemCollection.Count + 1) * Height / 10, totalLineWidth = totalWidth - totalCircleWidth;
+            float singleLineWidth = totalLineWidth / (float)itemCollection.Count;
+
+            StringFormat sFormat = new StringFormat();
+            sFormat.Alignment = sFormat.LineAlignment = StringAlignment.Center;
+
+            Brush brush;
+            Pen pen;
+            for (int ctr = 0; ctr < itemCollection.Count; ctr++)
+            {
+                pen = new Pen(colorCollection[itemCollection[ctr].Key]);
+                brush = new SolidBrush(colorCollection[itemCollection[ctr].Key]);
+
+                e.Graphics.DrawEllipse(pen, xPos, circleYPos, Height / 10, Height / 10);
+                e.Graphics.DrawLine(pen, xPos + Height / 10, lineYPos, xPos + Height / 10 + singleLineWidth, lineYPos);
+                Console.WriteLine(Height / 10 + (int)Math.Round(singleLineWidth));
+                Rectangle rectangle = new Rectangle(xPos, circleYPos, Height / 10 + (int)Math.Round(singleLineWidth), Height - circleYPos + Height / 10);
+
+                e.Graphics.DrawString(itemCollection[ctr].Key, Font, brush, rectangle, sFormat);
+
+                pen?.Dispose();
+                brush?.Dispose();
+
+                xPos = xPos + Height / 10 + (int)Math.Round(singleLineWidth);
+            }
+            pen = new Pen(colorCollection[itemCollection[itemCollection.Count - 1].Key]);
+            e.Graphics.DrawEllipse(pen, xPos, circleYPos, Height / 10, Height / 10);
         }
 
         private void AddControl(string name, double value, int pos)
@@ -471,17 +484,18 @@ namespace PowerControlsLibrary.MultiSlider
             sliderCollection = new Dictionary<string, Rectangle>();
             colorCollection = new Dictionary<string, Color>();
 
-            if (toolTip != null)
-                toolTip.SliderValueChanged -= OnSliderValueChanged;
+            if (selectedToolTip != null)
+                selectedToolTip.SliderValueChanged -= OnSliderValueChanged;
 
-            toolTip = new SliderValueToolTip(SliderTransparentColor)
+            selectedToolTip = new SliderValueToolTip(SliderTransparentColor)
             {
                 SliderToolTipBackColor = lineColor,
                 ForeColor = sliderColor,
                 IsUpsideDown = true,
-                IsCurrentSelectedToolTip = true
+                IsCurrentSelectedToolTip = true,
+                ToolTipDisplayType = DisplayType.NameAndValue
             };
-            toolTip.SliderValueChanged += OnSliderValueChanged;
+            selectedToolTip.SliderValueChanged += OnSliderValueChanged;
         }
 
         private int UpdateSelectedSliderValue(int xPos, int width)
@@ -535,12 +549,37 @@ namespace PowerControlsLibrary.MultiSlider
         {
             int totalWidth = Width - Padding.Left - Padding.Right, startPosY;
             double percentage = (value - MinimumValue) * 100 / (double)(MaximumValue - MinimumValue);
-            startPosY = milestoneMode == SliderMilestoneMode.Funnel ? Height * 3 / 10 : Height * 4 / 10;
+            startPosY = Height * 4 / 20;
             Point location = new Point((int)(percentage * totalWidth / 100) - sliderSize / 2 + Padding.Left, (startPosY - (sliderSize - Height / 10) / 2));
             return new Rectangle(location, new Size(sliderSize, sliderSize));
         }
 
-        public void ShowOtherToolTips()
+        public float GetFittingFontSize(Graphics g, string text, Font font, Rectangle rect)
+        {
+            float maxFontSize = font.Size;
+            float minFontSize = 1f;
+
+            while (maxFontSize - minFontSize > 0.5f)
+            {
+                float testSize = (maxFontSize + minFontSize) / 2;
+                using (Font testFont = new Font(font.FontFamily, testSize, font.Style))
+                {
+                    SizeF textSize = g.MeasureString(text, testFont);
+
+                    if (textSize.Width <= rect.Width && textSize.Height <= rect.Height)
+                    {
+                        minFontSize = testSize;
+                    }
+                    else
+                    {
+                        maxFontSize = testSize;
+                    }
+                }
+            }
+            return minFontSize;
+        }
+
+        private void ShowOtherToolTips()
         {
             int currentItemIdx = itemCollection.FindIndex(item => item.Key == selectedSlider), flagIdx = 0;
             toolTipCollection = new Dictionary<string, SliderValueToolTip>();
@@ -550,13 +589,14 @@ namespace PowerControlsLibrary.MultiSlider
                 otherToolTip = new SliderValueToolTip(sliderTransparentColor)
                 {
                     SliderToolTipBackColor = lineColor,
-                    ForeColor = sliderColor,
+                    ForeColor = colorCollection[itemCollection[ctr].Key],
                     Font = Font,
                     SliderName = itemCollection[ctr].Key,
-                    Value = (int)itemCollection[ctr].Value
+                    Value = (int)itemCollection[ctr].Value,
+                    ToolTipDisplayType = DisplayType.Name
                 };
 
-                otherToolTip.IsUpsideDown = flagIdx % 2 == 0 ? true : false;
+                otherToolTip.IsUpsideDown = TooltipDisplayMode == TooltipDisplayMode.Alternate && flagIdx % 2 == 0 ? true : false;
 
                 Rectangle slider = sliderCollection[itemCollection[ctr].Key];
                 Point toolTipLocation = PointToScreen(slider.Location);
@@ -575,13 +615,14 @@ namespace PowerControlsLibrary.MultiSlider
                 otherToolTip = new SliderValueToolTip(sliderTransparentColor)
                 {
                     SliderToolTipBackColor = lineColor,
-                    ForeColor = sliderColor,
+                    ForeColor = colorCollection[itemCollection[ctr].Key],
                     Font = Font,
                     SliderName = itemCollection[ctr].Key,
-                    Value = (int)itemCollection[ctr].Value
+                    Value = (int)itemCollection[ctr].Value,
+                    ToolTipDisplayType = DisplayType.Name
                 };
 
-                otherToolTip.IsUpsideDown = flagIdx % 2 == 0 ? true : false;
+                otherToolTip.IsUpsideDown = TooltipDisplayMode == TooltipDisplayMode.Alternate && flagIdx % 2 == 0 ? true : false;
 
                 Rectangle slider = sliderCollection[itemCollection[ctr].Key];
                 Point toolTipLocation = PointToScreen(slider.Location);
@@ -593,7 +634,7 @@ namespace PowerControlsLibrary.MultiSlider
             }
         }
 
-        public void CloseOtherToolTips()
+        private void CloseOtherToolTips()
         {
             if (toolTipCollection == null)
                 return;
@@ -610,15 +651,9 @@ namespace PowerControlsLibrary.MultiSlider
         }
     }
 
-    public enum SliderMilestoneMode
+    public enum TooltipDisplayMode
     {
-        Ruler,
-        Funnel
-    }
-
-    public enum SliderLegendMode
-    {
-        Form,
-        UpDownMarker
+        Down,
+        Alternate
     }
 }

@@ -19,6 +19,7 @@ namespace LibraryTestProject
         {
             //MyApplicationContext context = new MyApplicationContext();
             InitializeComponent();
+            multiSlider1.ItemDisplayOnHover = true;
             multiSlider1.ForeColor = Color.DeepSkyBlue;
             multiSlider1.BackColor = Color.AliceBlue;
             multiSlider1.SliderTransparentColor = BackColor;

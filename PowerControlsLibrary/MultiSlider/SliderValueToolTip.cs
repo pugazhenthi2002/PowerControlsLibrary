@@ -23,10 +23,13 @@ namespace PowerControlsLibrary.MultiSlider
             blinkTimer = new Timer();
             blinkTimer.Tick += OnTextInputBlink;
             blinkTimer.Interval = 750;
+            ShowInTaskbar = false;
             ForeColor = Color.Red;
             DoubleBuffered = true;
             BackColor = TransparencyKey = transparencyColor;
         }
+
+        public DisplayType ToolTipDisplayType { get; set; }
 
         public bool IsCurrentSelectedToolTip { get; set; }
 
@@ -140,6 +143,7 @@ namespace PowerControlsLibrary.MultiSlider
 
             graphPath.AddArc(new Rectangle(1, height - radius, radius, radius - 2), 90, 90);
             graphPath.CloseFigure();
+
             e.Graphics.FillPath(backgroundBrush, graphPath);
             e.Graphics.DrawPath(pen, graphPath);
 
@@ -150,14 +154,22 @@ namespace PowerControlsLibrary.MultiSlider
                 e.Graphics.ScaleTransform(1, -1);
                 posY = Height / 5;
             }
-            e.Graphics.DrawString(sliderName, headerFont, foregroundBrush, new RectangleF(0, posY, Width, height / 2), sFormat);
 
-            if (!IsInputEntry)
+            if (ToolTipDisplayType == DisplayType.Name)
             {
-                e.Graphics.DrawString(value.ToString(), Font, foregroundBrush, new RectangleF(0, posY + height / 2, Width, height / 2), sFormat);
+                e.Graphics.DrawString(sliderName, headerFont, foregroundBrush, new RectangleF(0, posY, Width, height), sFormat);
             }
             else
-                EnterInput(e.Graphics);
+            {
+                e.Graphics.DrawString(sliderName, headerFont, foregroundBrush, new RectangleF(0, posY, Width, height / 2), sFormat);
+                if (!IsInputEntry)
+                {
+                    e.Graphics.DrawString(value.ToString(), Font, foregroundBrush, new RectangleF(0, posY + height / 2, Width, height / 2), sFormat);
+                }
+                else
+                    EnterInput(e.Graphics);
+            }
+
 
             sFormat?.Dispose();
             pen?.Dispose();
@@ -245,5 +257,11 @@ namespace PowerControlsLibrary.MultiSlider
             isBlinking = !isBlinking;
             Invalidate();
         }
+    }
+
+    public enum DisplayType
+    {
+        NameAndValue,
+        Name
     }
 }
