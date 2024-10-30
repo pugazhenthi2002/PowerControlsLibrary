@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DatabaseLibrary;
-using PowerControlsLibrary.MultiSlider;
+
 
 namespace LibraryTestProject
 {
@@ -17,25 +17,16 @@ namespace LibraryTestProject
     {
         public Form1()
         {
-            //MyApplicationContext context = new MyApplicationContext();
             InitializeComponent();
-            multiSlider1.ItemDisplayOnHover = true;
-            multiSlider1.ForeColor = Color.DeepSkyBlue;
-            multiSlider1.BackColor = Color.AliceBlue;
-            multiSlider1.SliderTransparentColor = BackColor;
-            multiSlider1.Font = Font;
-            multiSlider1.AddItem("Small Defect Size", Color.Red, 0, 0);
-            multiSlider1.AddItem("Medium Defect Size", Color.Blue, 1, 200);
-            multiSlider1.AddItem("Large Defect Size", Color.Green, 2, 350);
-            multiSlider1.AddItem("Huge Defect Size", Color.Orange, 3, 600);
 
-            UpdatePrinterStatus();
+            multiSlider1.AddItem("Small Defect Size", Color.Red, 0, 100);
+            multiSlider1.AddItem("Medium Defect Size", Color.Green, 1, 300);
+            multiSlider1.AddItem("Large Defect Size", Color.Blue, 2, 450);
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            //multiSlider1.ShowOtherToolTips();
         }
 
         public static void UpdatePrinterStatus()
@@ -77,6 +68,11 @@ namespace LibraryTestProject
             catch(Exception ex) { }
 
                
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            //multiSliderControl1.Dispose();
         }
     }
 }

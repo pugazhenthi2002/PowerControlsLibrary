@@ -43,30 +43,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MultiSlider\MultiSlider.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="MultiSlider\SliderValueToolTip.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MultiSlider\SliderValueToolTip.Designer.cs">
-      <DependentUpon>SliderValueToolTip.cs</DependentUpon>
-    </Compile>
-    <Compile Include="TestControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="TestControl.Designer.cs">
-      <DependentUpon>TestControl.cs</DependentUpon>
+    <Compile Include="MultiSlider\SliderToolTip.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Service Include="{94E38DFF-614B-4cbd-B67C-F211BB35CE8B}" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="MultiSlider\SliderValueToolTip.resx">
-      <DependentUpon>SliderValueToolTip.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="TestControl.resx">
-      <DependentUpon>TestControl.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

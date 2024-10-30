@@ -28,25 +28,34 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.button1 = new System.Windows.Forms.Button();
             this.multiSlider1 = new PowerControlsLibrary.MultiSlider.MultiSlider();
             this.SuspendLayout();
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(595, 373);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(123, 73);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // multiSlider1
             // 
             this.multiSlider1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.multiSlider1.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.multiSlider1.ItemDisplayOnHover = false;
-            this.multiSlider1.LegendInterval = 5;
+            this.multiSlider1.LegendInterval = 1;
             this.multiSlider1.Location = new System.Drawing.Point(12, 115);
-            this.multiSlider1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.multiSlider1.MaximumValue = 1200;
-            this.multiSlider1.MinimumValue = 0;
+            this.multiSlider1.MaximumValue = 600;
+            this.multiSlider1.MinimumValue = 50;
             this.multiSlider1.Name = "multiSlider1";
-            this.multiSlider1.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);
+            this.multiSlider1.Padding = new System.Windows.Forms.Padding(20, 0, 20, 0);
             this.multiSlider1.Size = new System.Drawing.Size(1167, 100);
-            this.multiSlider1.SliderTransparentColor = System.Drawing.Color.Black;
-            this.multiSlider1.TabIndex = 3;
-            this.multiSlider1.Text = "multiSlider1";
+            this.multiSlider1.SliderTransparentColor = System.Drawing.Color.Empty;
+            this.multiSlider1.TabIndex = 2;
+            this.multiSlider1.TooltipDisplayMode = PowerControlsLibrary.MultiSlider.TooltipDisplayMode.Down;
             // 
             // Form1
             // 
@@ -55,6 +64,7 @@
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(1191, 519);
             this.Controls.Add(this.multiSlider1);
+            this.Controls.Add(this.button1);
             this.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Form1";
@@ -66,7 +76,7 @@
         }
 
         #endregion
-
+        private System.Windows.Forms.Button button1;
         private PowerControlsLibrary.MultiSlider.MultiSlider multiSlider1;
     }
 }

@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PowerControlsLibrary.MultiSlider
 {
-    public partial class SliderValueToolTip : Form
+    class SliderToolTip : Form
     {
         public delegate void SliderValueHandler(string name, int value);
         public event SliderValueHandler SliderValueChanged;
 
-        public SliderValueToolTip(Color transparencyColor)
+        public SliderToolTip(Color transparencyColor)
         {
-            InitializeComponent();
+            Width = 50; Height = 50;
+            FormBorderStyle = FormBorderStyle.None;
             blinkTimer = new Timer();
             blinkTimer.Tick += OnTextInputBlink;
             blinkTimer.Interval = 750;
@@ -79,7 +77,7 @@ namespace PowerControlsLibrary.MultiSlider
                 isInputEntry = value;
                 if (value)
                 {
-                    inputText = 0;
+                    inputText = this.value;
                     blinkTimer.Start();
                     Invalidate();
                 }
@@ -106,7 +104,6 @@ namespace PowerControlsLibrary.MultiSlider
         private bool isInputEntry, isBlinking;
         private int value, radius = 20, valueWidth, nameWidth, inputText;
         private string sliderName;
-        private Matrix lastGraphicsMatrix;
         private Color sliderToolTipBackColor;
         private Timer blinkTimer;
 
@@ -173,6 +170,7 @@ namespace PowerControlsLibrary.MultiSlider
 
             sFormat?.Dispose();
             pen?.Dispose();
+            graphPath?.Dispose();
             foregroundBrush?.Dispose();
             backgroundBrush?.Dispose();
         }
@@ -188,7 +186,7 @@ namespace PowerControlsLibrary.MultiSlider
             base.OnKeyPress(e);
             if ('0' <= e.KeyChar && e.KeyChar <= '9' && isInputEntry)
             {
-                if (inputText * 10 + Convert.ToInt32(e.KeyChar) > 0 && inputText * 10 + Convert.ToInt32(e.KeyChar) > inputText)
+                if (inputText * 10 + Convert.ToInt32(e.KeyChar) >= 0 && inputText * 10 + Convert.ToInt32(e.KeyChar) > inputText)
                 {
                     inputText = inputText * 10 + e.KeyChar - 48;
                     Invalidate();
@@ -226,7 +224,6 @@ namespace PowerControlsLibrary.MultiSlider
             int posY = 0;
             if (IsUpsideDown)
             {
-                //g.Restore(lastGraphicsMatrix);
                 posY = Height / 5;
             }
             Pen pen = new Pen(ForeColor, 2);
@@ -236,11 +233,8 @@ namespace PowerControlsLibrary.MultiSlider
             sFormat.LineAlignment = StringAlignment.Center;
             int width = 0, height = Height * 4 / 5;
 
-            if (inputText != 0)
-            {
-                width = (int)Math.Round(CreateGraphics().MeasureString(inputText.ToString(), Font).Width);
-                g.DrawString(inputText.ToString(), Font, brush, new RectangleF(0, posY + height / 2, Width, height / 2), sFormat);
-            }
+            width = (int)Math.Round(CreateGraphics().MeasureString(inputText.ToString(), Font).Width);
+            g.DrawString(inputText.ToString(), Font, brush, new RectangleF(0, posY + height / 2, Width, height / 2), sFormat);
 
             if (isBlinking)
             {
@@ -250,6 +244,7 @@ namespace PowerControlsLibrary.MultiSlider
 
             pen?.Dispose();
             brush?.Dispose();
+            sFormat?.Dispose();
         }
 
         private void OnTextInputBlink(object sender, EventArgs e)

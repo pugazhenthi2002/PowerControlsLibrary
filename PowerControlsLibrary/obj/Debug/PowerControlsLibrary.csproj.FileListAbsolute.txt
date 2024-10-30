@@ -4,6 +4,3 @@ C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\PowerControlsLibrary\obj
 C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\PowerControlsLibrary\obj\Debug\PowerControlsLibrary.csproj.CoreCompileInputs.cache
 C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\PowerControlsLibrary\obj\Debug\PowerControlsLibrary.dll
 C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\PowerControlsLibrary\obj\Debug\PowerControlsLibrary.pdb
-C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\PowerControlsLibrary\obj\Debug\PowerControlsLibrary.TestControl.resources
-C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\PowerControlsLibrary\obj\Debug\PowerControlsLibrary.csproj.GenerateResource.cache
-C:\Users\Pugaizhenthi\source\repos\PowerControlsLibrary\PowerControlsLibrary\obj\Debug\PowerControlsLibrary.MultiSlider.SliderValueToolTip.resources
